@@ -1,0 +1,71 @@
+version: '2'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: "nginx"
+    ports:
+      - "80:80"
+    env_file: .env
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    links:
+      - php
+    depends_on:
+      - php
+    volumes_from:
+      - app-data
+
+  apache:
+      image: wodby/apache:latest
+      container_name: "apache"
+      ports:
+        - "80:80"
+      env_file: .env
+      links:
+        - php
+      depends_on:
+        - php
+      volumes_from:
+        - app-data
+
+  php:  
+    build: ./php/
+    container_name: "php-fpm"
+    env_file: .env
+    expose:
+      - 9000
+    links:
+      - mysql
+    depends_on:
+      - mysql
+      - app-data
+    volumes_from:
+      - app-data
+
+  mysql:
+    image: mysql:latest
+    volumes_from:
+      - mysql-data
+    volumes:
+      - ./data/db-dump/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    container_name: "mysql"
+    ports:
+      - "3306:3306"
+    depends_on:
+      - mysql-data
+    env_file: .env
+
+  app-data:
+    image: php:7.0-fpm
+    container_name: "app-data"
+    volumes:
+      - ../:/var/www/html
+    command: "true"
+
+  mysql-data:
+    image: mysql:latest
+    container_name: "mysql-data"
+    volumes:
+      - ${PERSISTENT_DB}:/var/lib/mysql
+    command: "true"
