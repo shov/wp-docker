@@ -22,6 +22,8 @@ services:
       ports:
         - "80:80"
       env_file: .env
+      volumes:
+        - ./apache/conf.d:/usr/local/apache2/conf/conf.d
       links:
         - php
       depends_on:
@@ -47,8 +49,6 @@ services:
     image: mysql:latest
     volumes_from:
       - mysql-data
-    volumes:
-      - ./data/db-dump/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     container_name: "mysql"
     ports:
       - "3306:3306"
@@ -68,4 +68,6 @@ services:
     container_name: "mysql-data"
     volumes:
       - ${PERSISTENT_DB}:/var/lib/mysql
+      - ${DB_DUMPS}/init:/docker-entrypoint-initdb.d
+      - ${DB_DUMPS}/src:/dump-src
     command: "true"
